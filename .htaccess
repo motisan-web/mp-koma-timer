@@ -1,0 +1,10 @@
+# Allow iframe embedding
+Header always unset X-Frame-Options
+Header set Content-Security-Policy "frame-ancestors *"
+
+# Pretty URLs (optional, for future use)
+Options -Indexes
+
+# PHP error handling — log errors, don't display
+php_flag display_errors Off
+php_flag log_errors On
