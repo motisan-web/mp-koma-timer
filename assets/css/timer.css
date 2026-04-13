@@ -1,0 +1,465 @@
+/* ========================================
+   コマタイマー — CSS
+   ======================================== */
+
+:root {
+    --bg:           #0f1117;
+    --bg-card:      #1a1d27;
+    --bg-card-hover:#1f2333;
+    --bg-input:     #252836;
+    --border:       #2e3244;
+    --border-focus: #5c6bc0;
+
+    --text:         #e2e8f0;
+    --text-muted:   #8892a4;
+    --text-dim:     #4a5568;
+
+    --accent:       #5c6bc0;
+    --accent-hover: #7986cb;
+
+    --green:        #48bb78;
+    --green-bg:     rgba(72,187,120,0.15);
+    --orange:       #ed8936;
+    --orange-bg:    rgba(237,137,54,0.15);
+    --red:          #fc8181;
+    --red-bg:       rgba(252,129,129,0.15);
+    --blue:         #63b3ed;
+
+    --radius:       8px;
+    --radius-sm:    4px;
+    --shadow:       0 2px 8px rgba(0,0,0,0.4);
+
+    --font: "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+input, select, textarea, button { font-family: inherit; font-size: inherit; }
+
+/* --- Site Header --- */
+.site-header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.site-header__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+.site-header__logo {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    white-space: nowrap;
+}
+.site-header__nav {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+}
+.site-header__nav-link {
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 13px;
+    transition: color .15s, background .15s;
+}
+.site-header__nav-link:hover,
+.site-header__nav-link.is-active {
+    color: var(--text);
+    background: rgba(255,255,255,.06);
+}
+.site-header__nav-link.is-active {
+    color: var(--accent-hover);
+}
+.site-header__user {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* --- Site Footer --- */
+.site-footer {
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+    padding: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+/* --- Page Layout --- */
+.page-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px;
+}
+.page-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text);
+}
+
+/* --- Koma Grid --- */
+.koma-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+/* --- Koma Card --- */
+.koma-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color .2s;
+}
+.koma-card.is-running  { border-color: var(--green); }
+.koma-card.is-overtime { border-color: var(--orange); }
+.koma-card.is-overtime-max { border-color: var(--red); }
+.koma-card.is-completed { border-color: var(--border); opacity: .7; }
+.koma-card.is-paused    { border-color: var(--accent); }
+
+/* Card header row */
+.koma-card__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.koma-card__slot {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg-input);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+.koma-card__status-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.koma-card__status-badge.idle        { background: var(--bg-input);   color: var(--text-muted); }
+.koma-card__status-badge.running     { background: var(--green-bg);   color: var(--green); }
+.koma-card__status-badge.paused      { background: rgba(92,107,192,.15); color: var(--accent-hover); }
+.koma-card__status-badge.overtime    { background: var(--orange-bg);  color: var(--orange); }
+.koma-card__status-badge.overtime-max{ background: var(--red-bg);     color: var(--red); }
+.koma-card__status-badge.completed   { background: var(--green-bg);   color: var(--green); }
+
+/* Inputs */
+.koma-card__name-input,
+.koma-card__project-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 6px 10px;
+    outline: none;
+    transition: border-color .15s;
+}
+.koma-card__name-input:focus,
+.koma-card__project-input:focus {
+    border-color: var(--border-focus);
+}
+.koma-card__name-input::placeholder,
+.koma-card__project-input::placeholder {
+    color: var(--text-dim);
+}
+
+/* Progress bar */
+.koma-card__progress-wrap {
+    position: relative;
+}
+.koma-card__progress-bar {
+    height: 8px;
+    background: var(--bg-input);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.koma-card__progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--green);
+    transition: width .5s linear, background .3s;
+    width: 0%;
+}
+.is-overtime  .koma-card__progress-fill,
+.is-overtime-max .koma-card__progress-fill { background: var(--orange); }
+.is-completed .koma-card__progress-fill    { background: var(--accent); }
+
+.koma-card__progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+.koma-card__progress-pct {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+}
+.koma-card__overtime-label {
+    color: var(--orange);
+    font-weight: 600;
+    font-size: 11px;
+}
+
+/* Time display */
+.koma-card__time {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.koma-card__time-elapsed {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    letter-spacing: .02em;
+}
+.koma-card__time-remaining {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+.koma-card__time-remaining.is-negative { color: var(--orange); }
+
+/* Buttons */
+.koma-card__actions {
+    display: flex;
+    gap: 8px;
+}
+.btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: opacity .15s, background .15s;
+    white-space: nowrap;
+}
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+.btn-start    { background: var(--green);  color: #fff; border-color: var(--green); flex: 1; }
+.btn-pause    { background: transparent; color: var(--accent-hover); border-color: var(--accent); flex: 1; }
+.btn-complete { background: var(--accent); color: #fff; border-color: var(--accent); flex: 1; }
+.btn-start:hover:not(:disabled)    { opacity: .85; }
+.btn-pause:hover:not(:disabled)    { background: rgba(92,107,192,.15); }
+.btn-complete:hover:not(:disabled) { opacity: .85; }
+
+/* Break checkbox */
+.koma-card__break {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+}
+.koma-card__break input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+.koma-card__break.is-checked { color: var(--blue); }
+
+/* --- Buttons (generic) --- */
+.btn-secondary {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background .15s, color .15s;
+}
+.btn-secondary:hover { background: var(--bg-input); color: var(--text); }
+
+/* --- Stats / General page styles --- */
+.page-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+}
+.page-tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+}
+.page-tab.is-active { color: var(--accent-hover); border-bottom-color: var(--accent-hover); }
+.page-tab:hover:not(.is-active) { color: var(--text); }
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.data-table th {
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+}
+.data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(255,255,255,.02); }
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+}
+.card__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* Form rows in settings */
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+.form-row label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.form-row input[type="text"],
+.form-row input[type="url"],
+.form-row select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color .15s;
+    width: 100%;
+}
+.form-row input:focus,
+.form-row select:focus { border-color: var(--border-focus); }
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+.toggle-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+}
+.badge-green  { background: var(--green-bg);  color: var(--green); }
+.badge-orange { background: var(--orange-bg); color: var(--orange); }
+.badge-blue   { background: rgba(99,179,237,.15); color: var(--blue); }
+.badge-muted  { background: var(--bg-input); color: var(--text-muted); }
+
+/* Alert / notice */
+.notice {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+.notice-info    { background: rgba(99,179,237,.12);  color: var(--blue);   border: 1px solid rgba(99,179,237,.3); }
+.notice-success { background: var(--green-bg);       color: var(--green);  border: 1px solid rgba(72,187,120,.3); }
+.notice-error   { background: var(--red-bg);         color: var(--red);    border: 1px solid rgba(252,129,129,.3); }
+
+/* Markdown output box */
+.markdown-output {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    color: var(--text);
+    line-height: 1.8;
+    min-height: 120px;
+}
+
+/* --- Mobile --- */
+@media (max-width: 767px) {
+    .koma-grid {
+        grid-template-columns: 1fr;
+    }
+    .site-header__inner {
+        gap: 12px;
+        padding: 0 12px;
+    }
+    .site-header__nav-link {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    .page-main { padding: 16px 12px; }
+    .koma-card__time-elapsed { font-size: 18px; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .koma-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
