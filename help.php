@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/user.php';
-$currentUser = get_current_user();
+$currentUser = get_koma_user();
 ?>
 <!DOCTYPE html>
 <html lang="ja">

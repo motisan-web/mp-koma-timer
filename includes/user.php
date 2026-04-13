@@ -49,6 +49,6 @@ function push_project_history(string $project_id, string $user_id = CURRENT_USER
     save_user($user);
 }
 
-function get_current_user(): array {
+function get_koma_user(): array {
     return load_user(CURRENT_USER_ID);
 }

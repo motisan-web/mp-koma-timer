@@ -80,4 +80,4 @@
 （現在アクティブな issue なし）
 
 ## todo
-（現在アクティブな todo なし）
+- [ ] Xserverデプロイ後にcronジョブを設定する（`/api/cron_check.php` を2〜5分ごとに実行）

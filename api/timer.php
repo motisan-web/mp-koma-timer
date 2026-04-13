@@ -137,7 +137,7 @@ if ($action === 'get_state') {
         'session'     => $session,
         'config'      => $config,
         'today'       => today_str(),
-        'user'        => get_current_user(),
+        'user'        => get_koma_user(),
         'koma_duration_sec' => $koma_duration,
         'max_duration_sec'  => $max_duration,
     ]);

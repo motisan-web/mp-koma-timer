@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/user.php';
 
 $config      = load_config();
-$currentUser = get_current_user();
+$currentUser = get_koma_user();
 $tz          = new DateTimeZone('Asia/Tokyo');
 $today       = (new DateTime('now', $tz))->format('Y-m-d');
 $komaDur     = (int)$config['koma_duration_minutes'];

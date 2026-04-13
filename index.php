@@ -10,7 +10,7 @@ require_once __DIR__ . '/includes/user.php';
 require_once __DIR__ . '/includes/logger.php';
 
 $config      = load_config();
-$currentUser = get_current_user();
+$currentUser = get_koma_user();
 $komaCount   = (int)$config['koma_count'];
 $today       = (new DateTime('now', new DateTimeZone('Asia/Tokyo')))->format('Y-m-d');
 $session     = load_session($today);
