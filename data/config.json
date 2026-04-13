@@ -1,0 +1,32 @@
+{
+    "koma_count": 6,
+    "koma_duration_minutes": 80,
+    "max_duration_minutes": 100,
+    "hooks": {
+        "koma_start": {
+            "url": "",
+            "method": "GET",
+            "enabled": false
+        },
+        "koma_complete": {
+            "url": "",
+            "method": "GET",
+            "enabled": false
+        },
+        "koma_80min": {
+            "url": "",
+            "method": "GET",
+            "enabled": false
+        },
+        "koma_100min": {
+            "url": "",
+            "method": "GET",
+            "enabled": false
+        },
+        "break_notify": {
+            "url": "",
+            "method": "GET",
+            "enabled": false
+        }
+    }
+}
