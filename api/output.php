@@ -44,7 +44,7 @@ $komaNum      = 0;
 foreach ($komas as $k) {
     $komaNum++;
     $status    = $k['status'] ?? 'idle';
-    $done      = in_array($status, ['completed', 'overtime_max']);
+    $done      = in_array($status, ['completed', 'overtime_max', 'closed', 'auto_closed']);
     $checkBox  = $done ? '[x]' : '[ ]';
     $name      = $k['name'] ?: '（未記入）';
     $projId    = $k['project_id'] ?: '';

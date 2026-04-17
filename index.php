@@ -68,6 +68,9 @@ function status_class(string $status): string {
         </div>
     <?php endif; ?>
 
+    <!-- 前日の未完了コマエリア（JSで描画） -->
+    <div id="prev-incomplete-area"></div>
+
     <div class="koma-grid" id="koma-grid">
         <?php for ($slot = 1; $slot <= $komaCount; $slot++):
             $k      = $komaMap[$slot] ?? null;
@@ -167,12 +170,26 @@ function status_class(string $status): string {
 <?php endif; ?>
 
 <script>
+    // Collect yesterday's incomplete komas for the prev_incomplete area
+    // (same logic as api/timer.php get_state, but PHP-side for initial render)
+    <?php
+    $prevIncomplete = [];
+    $tz2 = new DateTimeZone('Asia/Tokyo');
+    $yesterday = (new DateTime('-1 day', $tz2))->format('Y-m-d');
+    $prevSession = load_session($yesterday);
+    foreach ($prevSession['koma'] as $pk) {
+        if (in_array($pk['status'], ['running', 'paused', 'overtime'])) {
+            $prevIncomplete[] = ['date' => $yesterday, 'koma' => $pk];
+        }
+    }
+    ?>
     window.KOMA_CONFIG = {
         komaCount:       <?= $komaCount ?>,
         komaDurationSec: <?= (int)$config['koma_duration_minutes'] * 60 ?>,
         maxDurationSec:  <?= (int)$config['max_duration_minutes'] * 60 ?>,
         today:           "<?= $today ?>",
         initialState:    <?= json_encode($session, JSON_UNESCAPED_UNICODE) ?>,
+        prevIncomplete:  <?= json_encode($prevIncomplete, JSON_UNESCAPED_UNICODE) ?>,
     };
 </script>
 <script src="/assets/js/timer.js"></script>

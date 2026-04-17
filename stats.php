@@ -91,7 +91,7 @@ function aggregate_days(array $sessions, int $komaDurSec): array {
         $totalSec   = 0;
         $overtimeSec = 0;
         foreach ($s['koma'] as $k) {
-            if (in_array($k['status'], ['completed', 'overtime_max'])) {
+            if (in_array($k['status'], ['completed', 'overtime_max', 'closed', 'auto_closed'])) {
                 $komaCount++;
             }
             $totalSec   += (int)($k['total_seconds'] ?? 0);
@@ -230,10 +230,10 @@ function fmt_min(int $sec): string {
                 $overSec = (int)($k['overtime_seconds'] ?? 0);
                 $status  = $k['status'] ?? 'idle';
                 $badgeCls = match($status) {
-                    'completed', 'overtime_max' => 'badge-green',
-                    'running', 'overtime'        => 'badge-blue',
-                    'paused'                     => 'badge-muted',
-                    default                      => 'badge-muted',
+                    'completed', 'overtime_max'  => 'badge-green',
+                    'running', 'overtime'         => 'badge-blue',
+                    'closed', 'auto_closed'       => 'badge-orange',
+                    default                       => 'badge-muted',
                 };
                 $statusLbl = match($status) {
                     'completed'    => '完了',
@@ -241,6 +241,8 @@ function fmt_min(int $sec): string {
                     'running'      => '実行中',
                     'overtime'     => '超過中',
                     'paused'       => '停止中',
+                    'closed'       => '中止',
+                    'auto_closed'  => '自動中止',
                     default        => '未開始',
                 };
             ?>

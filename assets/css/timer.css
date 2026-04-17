@@ -442,6 +442,45 @@ input, select, textarea, button { font-family: inherit; font-size: inherit; }
     min-height: 120px;
 }
 
+/* --- Prev incomplete area --- */
+.prev-incomplete-area {
+    margin-bottom: 24px;
+}
+.prev-incomplete-area__heading {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.prev-incomplete-area__heading::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--orange);
+    animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .2; }
+}
+.prev-incomplete-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+.koma-card--prev .koma-card__date-label {
+    font-size: 11px;
+    color: var(--orange);
+    margin-bottom: 4px;
+}
+
 /* --- Mobile --- */
 @media (max-width: 767px) {
     .koma-grid {
@@ -459,7 +498,13 @@ input, select, textarea, button { font-family: inherit; font-size: inherit; }
     .koma-card__time-elapsed { font-size: 18px; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-    .koma-grid {
+    .koma-grid,
+    .prev-incomplete-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 767px) {
+    .prev-incomplete-grid {
+        grid-template-columns: 1fr;
     }
 }
