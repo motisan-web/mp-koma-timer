@@ -21,6 +21,10 @@ foreach ($session['koma'] as $k) {
     $komaMap[(int)$k['id']] = $k;
 }
 
+// Render at least $komaCount slots, but also show any extra slots already in session
+$maxExistingSlot = empty($komaMap) ? 0 : max(array_keys($komaMap));
+$renderSlotCount = max($komaCount, $maxExistingSlot);
+
 $isEmbed = defined('EMBED_MODE') && EMBED_MODE;
 
 function status_label(string $status): string {
@@ -72,7 +76,7 @@ function status_class(string $status): string {
     <div id="prev-incomplete-area"></div>
 
     <div class="koma-grid" id="koma-grid">
-        <?php for ($slot = 1; $slot <= $komaCount; $slot++):
+        <?php for ($slot = 1; $slot <= $renderSlotCount; $slot++):
             $k      = $komaMap[$slot] ?? null;
             $status = $k['status'] ?? 'idle';
             $sClass = status_class($status);
@@ -155,6 +159,12 @@ function status_class(string $status): string {
 
         </div>
         <?php endfor; ?>
+
+        <!-- Add koma button — rendered as a grid cell -->
+        <button class="koma-add-btn" id="btn-add-koma" title="コマを追加">
+            <span class="koma-add-btn__icon">+</span>
+            <span class="koma-add-btn__label">コマを追加</span>
+        </button>
     </div>
 </main>
 
@@ -184,7 +194,7 @@ function status_class(string $status): string {
     }
     ?>
     window.KOMA_CONFIG = {
-        komaCount:       <?= $komaCount ?>,
+        komaCount:       <?= $renderSlotCount ?>,
         komaDurationSec: <?= (int)$config['koma_duration_minutes'] * 60 ?>,
         maxDurationSec:  <?= (int)$config['max_duration_minutes'] * 60 ?>,
         today:           "<?= $today ?>",

@@ -482,6 +482,117 @@ function bindMetaSave(input, key, field) {
 }
 
 // ================================================================
+// ADD KOMA (dynamic slot creation)
+// ================================================================
+
+const SLOT_MAX = 20;
+
+function currentMaxSlot() {
+    let max = CFG.komaCount;
+    document.querySelectorAll('.koma-card[data-slot]').forEach(card => {
+        const s = parseInt(card.dataset.slot, 10);
+        if (s > max) max = s;
+    });
+    return max;
+}
+
+function buildKomaCard(slot) {
+    const div = document.createElement('div');
+    div.className   = 'koma-card';
+    div.id          = `koma-card-${slot}`;
+    div.dataset.slot = slot;
+    div.innerHTML = `
+        <div class="koma-card__header">
+            <span class="koma-card__slot">コマ ${slot}</span>
+            <span class="koma-card__status-badge idle" id="koma-status-${slot}">未開始</span>
+        </div>
+        <input type="text" class="koma-card__name-input"
+               id="koma-name-${slot}" placeholder="作業内容" value=""
+               data-slot="${slot}">
+        <input type="text" class="koma-card__project-input"
+               id="koma-project-${slot}" placeholder="#project/"
+               value="" list="project-history-list" data-slot="${slot}">
+        <div class="koma-card__progress-wrap">
+            <div class="koma-card__progress-bar">
+                <div class="koma-card__progress-fill" id="koma-fill-${slot}" style="width:0%"></div>
+            </div>
+            <div class="koma-card__progress-labels">
+                <span class="koma-card__progress-pct" id="koma-pct-${slot}">0%</span>
+                <span class="koma-card__overtime-label" id="koma-overtime-${slot}" style="display:none"></span>
+            </div>
+        </div>
+        <div class="koma-card__time">
+            <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">経過</div>
+                <div class="koma-card__time-elapsed" id="koma-elapsed-${slot}">0:00:00</div>
+            </div>
+            <div style="text-align:right">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">残り</div>
+                <div class="koma-card__time-remaining" id="koma-remaining-${slot}">1:20:00</div>
+            </div>
+        </div>
+        <div class="koma-card__actions">
+            <button class="btn btn-start"    id="btn-start-${slot}"    data-slot="${slot}">開始</button>
+            <button class="btn btn-pause"    id="btn-pause-${slot}"    data-slot="${slot}" style="display:none">停止</button>
+            <button class="btn btn-complete" id="btn-complete-${slot}" data-slot="${slot}">完了</button>
+        </div>
+        <label class="koma-card__break" id="koma-break-label-${slot}">
+            <input type="checkbox" id="koma-break-${slot}" data-slot="${slot}">
+            10分休憩
+        </label>
+    `;
+    return div;
+}
+
+function addKoma() {
+    const next = currentMaxSlot() + 1;
+    if (next > SLOT_MAX) {
+        alert(`1日の上限（${SLOT_MAX}コマ）に達しています。`);
+        return;
+    }
+
+    const grid   = document.getElementById('koma-grid');
+    const addBtn = document.getElementById('btn-add-koma');
+    const card   = buildKomaCard(next);
+
+    // Insert before the add button
+    grid.insertBefore(card, addBtn);
+
+    // Initialize state
+    notified[next] = { '80': false, '100': false };
+    renderKoma(next);
+
+    // Bind events for the new card
+    card.querySelector(`#btn-start-${next}`)
+        .addEventListener('click', () => doStart(next));
+    card.querySelector(`#btn-pause-${next}`)
+        .addEventListener('click', () => doPause(next));
+    card.querySelector(`#btn-complete-${next}`)
+        .addEventListener('click', () => doComplete(next));
+
+    const nameInp = card.querySelector(`#koma-name-${next}`);
+    const projInp = card.querySelector(`#koma-project-${next}`);
+
+    let tN = null, tP = null;
+    nameInp.addEventListener('blur', () => doUpdateMeta(next, nameInp.value, undefined));
+    nameInp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doUpdateMeta(next, nameInp.value, undefined); nameInp.blur(); } });
+    nameInp.addEventListener('input', () => { clearTimeout(tN); tN = setTimeout(() => doUpdateMeta(next, nameInp.value, undefined), 800); });
+
+    projInp.addEventListener('blur', () => doUpdateMeta(next, undefined, projInp.value));
+    projInp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doUpdateMeta(next, undefined, projInp.value); projInp.blur(); } });
+    projInp.addEventListener('input', () => { clearTimeout(tP); tP = setTimeout(() => doUpdateMeta(next, undefined, projInp.value), 800); });
+
+    card.querySelector(`#koma-break-${next}`)
+        .addEventListener('change', e => doSetBreak(next, e.target.checked));
+
+    // Update CFG.komaCount so tick/notify logic covers the new slot
+    CFG.komaCount = next;
+
+    // Scroll into view
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ================================================================
 // PROJECT HISTORY DATALIST
 // ================================================================
 
@@ -545,4 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFromState(CFG.initialState);
     initPrevIncomplete(CFG.prevIncomplete);
     bindEvents();
+
+    const addBtn = document.getElementById('btn-add-koma');
+    if (addBtn) addBtn.addEventListener('click', addKoma);
 });

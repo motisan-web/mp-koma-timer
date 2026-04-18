@@ -219,8 +219,9 @@ if ($action === 'get_state') {
 
 // --- Actions that need a slot ---
 
-if ($slot < 1 || $slot > $koma_count) {
-    api_error("slot must be 1–{$koma_count}");
+define('SLOT_MAX', 20); // Hard upper limit per day
+if ($slot < 1 || $slot > SLOT_MAX) {
+    api_error('slot must be 1–' . SLOT_MAX);
 }
 
 // Session to operate on:

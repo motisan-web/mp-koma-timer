@@ -442,6 +442,37 @@ input, select, textarea, button { font-family: inherit; font-size: inherit; }
     min-height: 120px;
 }
 
+/* --- Add koma button (grid cell) --- */
+.koma-add-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 16px;
+    min-height: 80px;
+    transition: border-color .2s, color .2s, background .2s;
+}
+.koma-add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    background: rgba(92,107,192,.06);
+}
+.koma-add-btn__icon {
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 300;
+}
+.koma-add-btn__label {
+    font-size: 12px;
+    font-weight: 600;
+}
+
 /* --- Prev incomplete area --- */
 .prev-incomplete-area {
     margin-bottom: 24px;
