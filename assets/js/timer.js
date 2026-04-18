@@ -239,7 +239,7 @@ async function doSetBreak(slot, value) {
 // PREV INCOMPLETE KOMAS
 // ================================================================
 
-function prevKey(date, slot) { return `${date}:${slot}`; }
+function prevKey(date, slot) { return `${date.replace(/-/g,'')}s${slot}`; }
 
 function initPrevIncomplete(items) {
     if (!items || items.length === 0) return;

@@ -21,7 +21,21 @@ foreach ($session['koma'] as $k) {
     $komaMap[(int)$k['id']] = $k;
 }
 
-// Render at least $komaCount slots, but also show any extra slots already in session
+// Collect prev_incomplete slots so we can exclude them from today's grid
+$tz2 = new DateTimeZone('Asia/Tokyo');
+$yesterday = (new DateTime('-1 day', $tz2))->format('Y-m-d');
+$prevSession = load_session($yesterday);
+$prevIncomplete = [];
+$prevIncompleteSlots = [];
+foreach ($prevSession['koma'] as $pk) {
+    if (in_array($pk['status'], ['running', 'paused', 'overtime'])) {
+        $prevIncomplete[] = ['date' => $yesterday, 'koma' => $pk];
+        $prevIncompleteSlots[(int)$pk['id']] = true;
+    }
+}
+
+// Render at least $komaCount slots, but also show any extra slots already in today's session.
+// Skip slots that are being shown in prev_incomplete to avoid duplicate cards.
 $maxExistingSlot = empty($komaMap) ? 0 : max(array_keys($komaMap));
 $renderSlotCount = max($komaCount, $maxExistingSlot);
 
@@ -77,6 +91,8 @@ function status_class(string $status): string {
 
     <div class="koma-grid" id="koma-grid">
         <?php for ($slot = 1; $slot <= $renderSlotCount; $slot++):
+            // Skip slots shown in prev_incomplete area (they live in yesterday's session)
+            if (isset($prevIncompleteSlots[$slot]) && !isset($komaMap[$slot])) continue;
             $k      = $komaMap[$slot] ?? null;
             $status = $k['status'] ?? 'idle';
             $sClass = status_class($status);
@@ -180,19 +196,6 @@ function status_class(string $status): string {
 <?php endif; ?>
 
 <script>
-    // Collect yesterday's incomplete komas for the prev_incomplete area
-    // (same logic as api/timer.php get_state, but PHP-side for initial render)
-    <?php
-    $prevIncomplete = [];
-    $tz2 = new DateTimeZone('Asia/Tokyo');
-    $yesterday = (new DateTime('-1 day', $tz2))->format('Y-m-d');
-    $prevSession = load_session($yesterday);
-    foreach ($prevSession['koma'] as $pk) {
-        if (in_array($pk['status'], ['running', 'paused', 'overtime'])) {
-            $prevIncomplete[] = ['date' => $yesterday, 'koma' => $pk];
-        }
-    }
-    ?>
     window.KOMA_CONFIG = {
         komaCount:       <?= $renderSlotCount ?>,
         komaDurationSec: <?= (int)$config['koma_duration_minutes'] * 60 ?>,
