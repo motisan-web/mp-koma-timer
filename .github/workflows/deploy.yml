@@ -1,0 +1,19 @@
+name: Deploy 9jf2.motisan.info
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.STAGING_SERVER }}
+          username: ${{ secrets.STAGING_USERNAME }}
+          password: ${{ secrets.STAGING_PASSWORD }}
+          server-dir: ./
+          local-dir: ./
