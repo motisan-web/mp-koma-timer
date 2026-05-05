@@ -102,10 +102,11 @@ function initFromState(session) {
 }
 
 function renderKoma(slot) {
+    const card = document.getElementById(`koma-card-${slot}`);
+    if (!card) return; // slot is rendered elsewhere (e.g. prev-incomplete area)
+
     const k      = komaState[slot];
     const status = k ? k.status : 'idle';
-
-    const card        = document.getElementById(`koma-card-${slot}`);
     const badge       = document.getElementById(`koma-status-${slot}`);
     const fill        = document.getElementById(`koma-fill-${slot}`);
     const pct         = document.getElementById(`koma-pct-${slot}`);
@@ -115,6 +116,7 @@ function renderKoma(slot) {
     const btnStart    = document.getElementById(`btn-start-${slot}`);
     const btnPause    = document.getElementById(`btn-pause-${slot}`);
     const btnComplete = document.getElementById(`btn-complete-${slot}`);
+    const btnReset    = document.getElementById(`btn-reset-${slot}`);
     const nameInput   = document.getElementById(`koma-name-${slot}`);
     const projInput   = document.getElementById(`koma-project-${slot}`);
     const breakLabel  = document.getElementById(`koma-break-label-${slot}`);
@@ -152,10 +154,15 @@ function renderKoma(slot) {
     const isRunning = status === 'running' || status === 'overtime';
     const done      = isDone(status);
 
-    btnStart.style.display  = isRunning ? 'none' : '';
-    btnPause.style.display  = isRunning ? '' : 'none';
-    btnStart.disabled       = done;
-    btnComplete.disabled    = done;
+    const isPhantom = done && status === 'completed' && k && k.segments.length === 0;
+
+    btnStart.style.display   = isRunning ? 'none' : '';
+    btnPause.style.display   = isRunning ? '' : 'none';
+    btnStart.disabled        = done;
+    btnComplete.disabled     = done || status === 'idle';
+    if (btnReset) {
+        btnReset.style.display = isPhantom ? '' : 'none';
+    }
 }
 
 function startTick(slot) {
@@ -228,6 +235,13 @@ async function doUpdateMeta(slot, name, projectId) {
         komaState[slot] = res.koma;
         refreshProjectHistory(res.koma.project_id);
     }
+}
+
+async function doReset(slot) {
+    const res = await apiCall('reset', { slot });
+    if (!res.ok) { console.error('reset failed', res.error); return; }
+    komaState[slot] = res.koma;
+    renderKoma(slot);
 }
 
 async function doSetBreak(slot, value) {
@@ -534,7 +548,8 @@ function buildKomaCard(slot) {
         <div class="koma-card__actions">
             <button class="btn btn-start"    id="btn-start-${slot}"    data-slot="${slot}">開始</button>
             <button class="btn btn-pause"    id="btn-pause-${slot}"    data-slot="${slot}" style="display:none">停止</button>
-            <button class="btn btn-complete" id="btn-complete-${slot}" data-slot="${slot}">完了</button>
+            <button class="btn btn-complete" id="btn-complete-${slot}" data-slot="${slot}" disabled>完了</button>
+            <button class="btn btn-secondary btn-reset" id="btn-reset-${slot}" data-slot="${slot}" style="display:none;padding:6px 10px;">リセット</button>
         </div>
         <label class="koma-card__break" id="koma-break-label-${slot}">
             <input type="checkbox" id="koma-break-${slot}" data-slot="${slot}">
@@ -569,6 +584,8 @@ function addKoma() {
         .addEventListener('click', () => doPause(next));
     card.querySelector(`#btn-complete-${next}`)
         .addEventListener('click', () => doComplete(next));
+    card.querySelector(`#btn-reset-${next}`)
+        .addEventListener('click', () => doReset(next));
 
     const nameInp = card.querySelector(`#koma-name-${next}`);
     const projInp = card.querySelector(`#koma-project-${next}`);
@@ -625,6 +642,9 @@ function bindEvents() {
     });
     document.querySelectorAll('.btn-complete').forEach(btn => {
         btn.addEventListener('click', () => doComplete(+btn.dataset.slot));
+    });
+    document.querySelectorAll('.btn-reset').forEach(btn => {
+        btn.addEventListener('click', () => doReset(+btn.dataset.slot));
     });
 
     document.querySelectorAll('.koma-card__name-input').forEach(input => {

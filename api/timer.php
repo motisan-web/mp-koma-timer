@@ -308,6 +308,24 @@ switch ($action) {
 
         api_ok(['koma' => $k, 'date' => $target_date]);
 
+    case 'reset':
+        // Reset a phantom-completed koma (completed with no segments) back to idle.
+        // Only allowed when segments is empty so real work is never lost.
+        if ($idx === -1) api_error('コマが見つかりません');
+        $k = &$session['koma'][$idx];
+
+        if (!empty($k['segments'])) {
+            api_error('開始済みのコマはリセットできません');
+        }
+
+        $k['status']           = 'idle';
+        $k['completed_at']     = null;
+        $k['total_seconds']    = 0;
+        $k['overtime_seconds'] = 0;
+
+        save_session($session);
+        api_ok(['koma' => $k, 'date' => $target_date]);
+
     case 'close':
         // Manual abandon — marks as 'closed'
         $idx = ensure_koma($session, $slot);

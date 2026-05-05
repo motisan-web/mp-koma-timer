@@ -36,7 +36,14 @@ foreach ($prevSession['koma'] as $pk) {
 
 // Render at least $komaCount slots, but also show any extra slots already in today's session.
 // Skip slots that are being shown in prev_incomplete to avoid duplicate cards.
-$maxExistingSlot = empty($komaMap) ? 0 : max(array_keys($komaMap));
+// Only count slots that have actually been worked on (have segments or non-idle status)
+// so that phantom idle komas from a previous day's dynamic addKoma don't inflate the count.
+$maxExistingSlot = 0;
+foreach ($komaMap as $slotId => $k) {
+    if (!($k['status'] === 'idle' && empty($k['segments']))) {
+        $maxExistingSlot = max($maxExistingSlot, (int)$slotId);
+    }
+}
 $renderSlotCount = max($komaCount, $maxExistingSlot);
 
 $isEmbed = defined('EMBED_MODE') && EMBED_MODE;
@@ -159,7 +166,10 @@ function status_class(string $status): string {
             <div class="koma-card__actions">
                 <button class="btn btn-start"    id="btn-start-<?= $slot ?>"    data-slot="<?= $slot ?>">開始</button>
                 <button class="btn btn-pause"    id="btn-pause-<?= $slot ?>"    data-slot="<?= $slot ?>" style="display:none">停止</button>
-                <button class="btn btn-complete" id="btn-complete-<?= $slot ?>" data-slot="<?= $slot ?>">完了</button>
+                <button class="btn btn-complete" id="btn-complete-<?= $slot ?>" data-slot="<?= $slot ?>"
+                    <?= $status === 'idle' ? 'disabled' : '' ?>>完了</button>
+                <button class="btn btn-secondary btn-reset" id="btn-reset-<?= $slot ?>" data-slot="<?= $slot ?>"
+                    style="display:none;padding:6px 10px;">リセット</button>
             </div>
 
             <!-- Break checkbox -->

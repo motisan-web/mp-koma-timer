@@ -1,25 +1,26 @@
 # 現在の作業状態
 
-> 最終更新: 2026-04-19
+> 最終更新: 2026-04-29
 
 ---
 
 ## 直近で完了したこと
-（詳細: `.claude-codex/change/バグ修正と機能追加.md`）
+（詳細: `.claude-codex/change/完了ボタン制御とリセット機能.md`）
 
-- **[fix]** `get_current_user()` → `get_koma_user()` にリネーム（PHP組み込み関数と名前衝突でFatal error）
-- **[feat]** `api/cron_check.php` — 100分超過コマのサーバー側自動完了スクリプト
-- **[fix]** 前日コマのスロット混入バグ修正（前日コマが今日のスロットを上書きしていた）
-- **[feat]** `closed`（手動中止）・`auto_closed`（2日以上前の自動中止）ステータス追加
-- **[feat]** `get_state` に `prev_incomplete`（前日の未完了コマ一覧）を追加、`close` アクション追加
-- **[feat]** メインページに「前日の未完了コマ」エリア — 再開/停止/完了/中止ボタン付きカード
-- **[feat]** 動的コマ追加ボタン（7コマ以上対応、最大20コマ、セッション保存済みスロットはリロード後も復元）
-- **[fix]** `prevKey` のCSSセレクター不正バグ修正（`:` → `s` 区切り）、前日コマカードが表示されない問題を解消
+- **[fix]** idle 状態では完了ボタンを無効化（PHP + JS 両方で制御）
+- **[feat]** `api/timer.php` に `reset` アクション追加 — segments 空の phantom completed koma を idle に戻す
+- **[feat]** JS `renderKoma()` に「リセット」ボタン表示ロジック追加 — `completed` + `segments.length === 0` のときのみ表示
+- **[fix]** 既存 phantom koma データを削除（04-28 id:3、04-25 id:2）
+
+（詳細: `.claude-codex/change/スロットリセットバグ修正.md`）
+
+- **[fix]** `index.php` の `$maxExistingSlot` 計算 — `idle` + `segments:[]` の phantom koma を除外
 
 ---
 
 ## 次にやること
 - Xserverデプロイ後にcronジョブを設定する（`/api/cron_check.php` を2〜5分ごと）
+- ライトテーマ実装（issue 残存）
 - それ以外はユーザーの指示を待つ
 
 ---
@@ -31,6 +32,9 @@
   - 前日コマ操作時はJSが `date` を付けてリクエストする
 - スロット上限は `SLOT_MAX = 20`（config.jsonのkoma_countとは別）
 - `auto_close_old_komas()` は `get_state` 呼び出し時に毎回走る（2日以上前のみ対象、軽量）
+- `update_meta` / `complete` / `close` / `set_break` はすべて `ensure_koma()` を呼ぶ
+  → idle koma が JSON に作成されるのは仕様。表示カウントへの影響はなし（修正済み）
+- `reset` アクションは `segments` が空のコマ専用。開始済みコマには適用不可
 
 ### データ
 - コマのステータス全種: `idle` / `running` / `paused` / `overtime` / `overtime_max` / `completed` / `closed` / `auto_closed`
@@ -43,6 +47,7 @@
 - `prevKey(date, slot)` は `"YYYYMMDD s スロット番号"` 形式（例: `"20260418s7"`）— CSSセレクター用
 - `CFG.komaCount` はページロード時に PHP 側の `$renderSlotCount` で初期化。動的追加のたびにJSで更新される
 - 前日コマエリアはJSで動的生成（PHPは `prevIncomplete` 配列をCFGに渡すだけ）
+- 「リセット」ボタン（`btn-reset-{slot}`）は `completed` + `segments.length === 0` のときのみ表示。それ以外は `display:none`
 
 ### インフラ
 - git7.local: XAMPP virtualhost（ローカル開発）

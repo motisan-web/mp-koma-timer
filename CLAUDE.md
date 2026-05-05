@@ -77,7 +77,7 @@
 ---
 
 ## issue
-（現在アクティブな issue なし）
+- [ ] ライトテーマ未実装 — 現在はダークテーマのみ。header にテーマ切り替えボタンを追加し、選択状態は data/config.json（または既存の config）に保存する
 
 ## todo
 - [ ] Xserverデプロイ後にcronジョブを設定する（`/api/cron_check.php` を2〜5分ごとに実行）
