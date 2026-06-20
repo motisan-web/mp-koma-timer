@@ -40,7 +40,13 @@ foreach ($prevSession['koma'] as $pk) {
 // so that phantom idle komas from a previous day's dynamic addKoma don't inflate the count.
 $maxExistingSlot = 0;
 foreach ($komaMap as $slotId => $k) {
-    if (!($k['status'] === 'idle' && empty($k['segments']))) {
+    // Exclude only truly empty phantom komas (idle, no segments, no user input).
+    // Komas with name/project_id or non-idle status are always counted.
+    $isPhantom = $k['status'] === 'idle'
+        && empty($k['segments'])
+        && empty($k['name'])
+        && empty($k['project_id']);
+    if (!$isPhantom) {
         $maxExistingSlot = max($maxExistingSlot, (int)$slotId);
     }
 }
