@@ -181,6 +181,16 @@ $koma_count    = (int)$config['koma_count'];
 $koma_duration = (int)$config['koma_duration_minutes'] * 60;
 $max_duration  = (int)$config['max_duration_minutes'] * 60;
 
+// --- Non-slot actions ---
+
+if ($action === 'set_theme') {
+    $theme = ($req['theme'] ?? '') === 'light' ? 'light' : 'dark';
+    $cfg   = load_config();
+    $cfg['theme'] = $theme;
+    save_config($cfg);
+    api_ok(['theme' => $theme]);
+}
+
 // --- get_state ---
 
 if ($action === 'get_state') {
@@ -194,9 +204,7 @@ if ($action === 'get_state') {
     foreach ($session['koma'] as &$k) {
         if (in_array($k['status'], ['running', 'overtime'])) {
             $k['total_seconds'] = calc_elapsed($k['segments']);
-            if ($k['total_seconds'] >= $max_duration) {
-                $k['status'] = 'overtime_max';
-            } elseif ($k['total_seconds'] >= $koma_duration) {
+            if ($k['total_seconds'] >= $koma_duration) {
                 $k['status'] = 'overtime';
             }
         }
@@ -242,9 +250,6 @@ switch ($action) {
         }
 
         $elapsed = calc_elapsed($k['segments']);
-        if ($elapsed >= $max_duration) {
-            api_error('最大時間（100分）に達しています');
-        }
 
         close_open_segment($k['segments']);
 
@@ -286,7 +291,12 @@ switch ($action) {
         $k['total_seconds']    = $elapsed;
         $k['overtime_seconds'] = max(0, $elapsed - $koma_duration);
         $k['status']           = 'completed';
-        $k['completed_at']     = now_iso();
+        // For past-date komas, use the last segment's end time to avoid
+        // attributing the completion to today's date in stats.
+        $lastSeg = !empty($k['segments']) ? end($k['segments']) : null;
+        $k['completed_at'] = ($target_date !== today_str() && $lastSeg && isset($lastSeg['end']))
+            ? $lastSeg['end']
+            : now_iso();
 
         save_session($session);
 
@@ -376,20 +386,26 @@ switch ($action) {
         api_ok();
 
     case 'notify_100min':
-        $idx = ensure_koma($session, $slot);
-        $k   = &$session['koma'][$idx];
+        // Hook-only: no longer auto-completes the koma (廃止: #I-004).
+        fire_hook('koma_100min', ['slot' => $slot, 'user_id' => CURRENT_USER_ID, 'date' => $target_date]);
+        api_ok(['date' => $target_date]);
+
+    case 'round_to_100min':
+        // Cap a completed koma's total_seconds to max_duration (100 min).
+        if ($idx === -1) api_error('コマが見つかりません');
+        $k = &$session['koma'][$idx];
 
         if (!in_array($k['status'], ['completed', 'closed', 'auto_closed'])) {
-            close_open_segment($k['segments']);
-            $elapsed = calc_elapsed($k['segments']);
-            $k['total_seconds']    = $elapsed;
-            $k['overtime_seconds'] = max(0, $elapsed - $koma_duration);
-            $k['status']           = 'completed';
-            $k['completed_at']     = now_iso();
-            save_session($session);
+            api_error('完了済みコマのみ丸め可能です');
+        }
+        if ((int)$k['total_seconds'] <= $max_duration) {
+            api_error('100分以下のため丸め不要です');
         }
 
-        fire_hook('koma_100min', ['slot' => $slot, 'user_id' => CURRENT_USER_ID, 'date' => $target_date]);
+        $k['total_seconds']    = $max_duration;
+        $k['overtime_seconds'] = max(0, $max_duration - $koma_duration);
+
+        save_session($session);
         api_ok(['koma' => $k, 'date' => $target_date]);
 
     default:

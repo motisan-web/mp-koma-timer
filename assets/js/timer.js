@@ -117,6 +117,7 @@ function renderKoma(slot) {
     const btnPause    = document.getElementById(`btn-pause-${slot}`);
     const btnComplete = document.getElementById(`btn-complete-${slot}`);
     const btnReset    = document.getElementById(`btn-reset-${slot}`);
+    const btnRound    = document.getElementById(`btn-round-${slot}`);
     const nameInput   = document.getElementById(`koma-name-${slot}`);
     const projInput   = document.getElementById(`koma-project-${slot}`);
     const breakLabel  = document.getElementById(`koma-break-label-${slot}`);
@@ -163,6 +164,9 @@ function renderKoma(slot) {
     if (btnReset) {
         btnReset.style.display = isPhantom ? '' : 'none';
     }
+    if (btnRound) {
+        btnRound.style.display = (done && elapsed > CFG.maxDurationSec) ? '' : 'none';
+    }
 }
 
 function startTick(slot) {
@@ -186,16 +190,6 @@ function tick(slot) {
         notified[slot]['80'] = true;
         apiCall('notify_80min', { slot });
         k.status = 'overtime';
-    }
-
-    if (elapsed >= CFG.maxDurationSec && !notified[slot]['100']) {
-        notified[slot]['100'] = true;
-        apiCall('notify_100min', { slot }).then(res => {
-            komaState[slot] = res.ok && res.koma ? res.koma : { ...k, status: 'completed' };
-            stopTick(slot);
-            renderKoma(slot);
-        });
-        return;
     }
 
     renderKoma(slot);
@@ -240,6 +234,14 @@ async function doUpdateMeta(slot, name, projectId) {
 async function doReset(slot) {
     const res = await apiCall('reset', { slot });
     if (!res.ok) { console.error('reset failed', res.error); return; }
+    komaState[slot] = res.koma;
+    renderKoma(slot);
+}
+
+async function doRoundTo100min(slot) {
+    if (!confirm('このコマの記録を100分に丸めますか？')) return;
+    const res = await apiCall('round_to_100min', { slot });
+    if (!res.ok) { console.error('round failed', res.error); return; }
     komaState[slot] = res.koma;
     renderKoma(slot);
 }
@@ -550,6 +552,7 @@ function buildKomaCard(slot) {
             <button class="btn btn-pause"    id="btn-pause-${slot}"    data-slot="${slot}" style="display:none">停止</button>
             <button class="btn btn-complete" id="btn-complete-${slot}" data-slot="${slot}" disabled>完了</button>
             <button class="btn btn-secondary btn-reset" id="btn-reset-${slot}" data-slot="${slot}" style="display:none;padding:6px 10px;">リセット</button>
+            <button class="btn btn-round" id="btn-round-${slot}" data-slot="${slot}" style="display:none;padding:6px 10px;">100分に丸める</button>
         </div>
         <label class="koma-card__break" id="koma-break-label-${slot}">
             <input type="checkbox" id="koma-break-${slot}" data-slot="${slot}">
@@ -586,6 +589,8 @@ function addKoma() {
         .addEventListener('click', () => doComplete(next));
     card.querySelector(`#btn-reset-${next}`)
         .addEventListener('click', () => doReset(next));
+    card.querySelector(`#btn-round-${next}`)
+        .addEventListener('click', () => doRoundTo100min(next));
 
     const nameInp = card.querySelector(`#koma-name-${next}`);
     const projInp = card.querySelector(`#koma-project-${next}`);
@@ -646,6 +651,9 @@ function bindEvents() {
     document.querySelectorAll('.btn-reset').forEach(btn => {
         btn.addEventListener('click', () => doReset(+btn.dataset.slot));
     });
+    document.querySelectorAll('.btn-round').forEach(btn => {
+        btn.addEventListener('click', () => doRoundTo100min(+btn.dataset.slot));
+    });
 
     document.querySelectorAll('.koma-card__name-input').forEach(input => {
         let t = null;
@@ -669,6 +677,59 @@ function bindEvents() {
 }
 
 // ================================================================
+// HISTORY
+// ================================================================
+
+function findFirstIdleSlot() {
+    for (let slot = 1; slot <= CFG.komaCount; slot++) {
+        const k = komaState[slot];
+        if (!k || k.status === 'idle') return slot;
+    }
+    return null;
+}
+
+function copyHistoryEntry(name, projectId) {
+    const slot = findFirstIdleSlot();
+    if (slot === null) {
+        alert('空きコマがありません。コマを追加してから再度お試しください。');
+        return;
+    }
+    const nameEl = document.getElementById(`koma-name-${slot}`);
+    const projEl = document.getElementById(`koma-project-${slot}`);
+    if (nameEl) nameEl.value = name;
+    if (projEl) projEl.value = projectId;
+    doUpdateMeta(slot, name, projectId);
+    const card = document.getElementById(`koma-card-${slot}`);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function initHistoryEvents() {
+    // Toggle open/close
+    const toggleBtn = document.getElementById('btn-history-toggle');
+    const body      = document.getElementById('koma-history-body');
+    const icon      = document.getElementById('history-toggle-icon');
+    if (toggleBtn && body) {
+        toggleBtn.addEventListener('click', () => {
+            const isOpen = body.style.display !== 'none';
+            body.style.display  = isOpen ? 'none' : '';
+            icon.textContent    = isOpen ? '▶' : '▼';
+        });
+    }
+
+    // Copy buttons
+    document.querySelectorAll('.btn-history-copy').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const row       = btn.closest('.koma-history__row');
+            const name      = row.dataset.name      || '';
+            const projectId = row.dataset.project   || '';
+            copyHistoryEntry(name, projectId);
+            btn.textContent = 'コピー済み';
+            setTimeout(() => { btn.textContent = 'コピー'; }, 2000);
+        });
+    });
+}
+
+// ================================================================
 // BOOT
 // ================================================================
 
@@ -676,6 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFromState(CFG.initialState);
     initPrevIncomplete(CFG.prevIncomplete);
     bindEvents();
+    initHistoryEvents();
 
     const addBtn = document.getElementById('btn-add-koma');
     if (addBtn) addBtn.addEventListener('click', addKoma);

@@ -48,6 +48,34 @@ $renderSlotCount = max($komaCount, $maxExistingSlot);
 
 $isEmbed = defined('EMBED_MODE') && EMBED_MODE;
 
+// Build recent koma history (past 14 days, completed komas with content)
+$recentHistory = [];
+if (!$isEmbed) {
+    $tz3 = new DateTimeZone('Asia/Tokyo');
+    for ($d = 1; $d <= 14; $d++) {
+        $hDate = (new DateTime("-{$d} days", $tz3))->format('Y-m-d');
+        $hPath = session_data_path($hDate);
+        if (!file_exists($hPath)) continue;
+        $hSession = load_session($hDate);
+        foreach ($hSession['koma'] as $hk) {
+            if (!in_array($hk['status'], ['completed', 'closed', 'auto_closed'])) continue;
+            if (empty($hk['name']) && empty($hk['project_id'])) continue;
+            $recentHistory[] = [
+                'date'       => $hDate,
+                'slot'       => (int)$hk['id'],
+                'name'       => $hk['name'] ?? '',
+                'project_id' => $hk['project_id'] ?? '',
+                'total_seconds' => (int)($hk['total_seconds'] ?? 0),
+            ];
+        }
+    }
+    // Sort newest first (already added in date desc order, but sort by date+slot to be safe)
+    usort($recentHistory, fn($a, $b) =>
+        $b['date'] <=> $a['date'] ?: $b['slot'] <=> $a['slot']
+    );
+    $recentHistory = array_slice($recentHistory, 0, 40);
+}
+
 function status_label(string $status): string {
     return match($status) {
         'running'      => '実行中',
@@ -71,7 +99,7 @@ function status_class(string $status): string {
 }
 ?>
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="<?= htmlspecialchars($config['theme'] ?? 'dark') ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -98,8 +126,6 @@ function status_class(string $status): string {
 
     <div class="koma-grid" id="koma-grid">
         <?php for ($slot = 1; $slot <= $renderSlotCount; $slot++):
-            // Skip slots shown in prev_incomplete area (they live in yesterday's session)
-            if (isset($prevIncompleteSlots[$slot]) && !isset($komaMap[$slot])) continue;
             $k      = $komaMap[$slot] ?? null;
             $status = $k['status'] ?? 'idle';
             $sClass = status_class($status);
@@ -170,6 +196,8 @@ function status_class(string $status): string {
                     <?= $status === 'idle' ? 'disabled' : '' ?>>完了</button>
                 <button class="btn btn-secondary btn-reset" id="btn-reset-<?= $slot ?>" data-slot="<?= $slot ?>"
                     style="display:none;padding:6px 10px;">リセット</button>
+                <button class="btn btn-round" id="btn-round-<?= $slot ?>" data-slot="<?= $slot ?>"
+                    style="display:none;padding:6px 10px;">100分に丸める</button>
             </div>
 
             <!-- Break checkbox -->
@@ -192,6 +220,45 @@ function status_class(string $status): string {
             <span class="koma-add-btn__label">コマを追加</span>
         </button>
     </div>
+    <?php if (!$isEmbed && !empty($recentHistory)): ?>
+    <!-- 履歴エリア -->
+    <div class="koma-history" id="koma-history-area">
+        <button class="koma-history__toggle" id="btn-history-toggle">
+            <span>履歴</span>
+            <span class="koma-history__toggle-icon" id="history-toggle-icon">▼</span>
+        </button>
+        <div class="koma-history__body" id="koma-history-body">
+            <table class="koma-history__table">
+                <thead>
+                    <tr>
+                        <th>日付</th>
+                        <th>コマ</th>
+                        <th>内容</th>
+                        <th>プロジェクト</th>
+                        <th>時間</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="koma-history-tbody">
+                <?php foreach ($recentHistory as $h):
+                    $min = (int)round($h['total_seconds'] / 60);
+                ?>
+                    <tr class="koma-history__row"
+                        data-name="<?= htmlspecialchars($h['name']) ?>"
+                        data-project="<?= htmlspecialchars($h['project_id']) ?>">
+                        <td class="koma-history__date"><?= htmlspecialchars($h['date']) ?></td>
+                        <td class="koma-history__slot">コマ<?= $h['slot'] ?></td>
+                        <td class="koma-history__name"><?= htmlspecialchars($h['name'] ?: '—') ?></td>
+                        <td class="koma-history__project"><?= htmlspecialchars($h['project_id'] ?: '—') ?></td>
+                        <td class="koma-history__time"><?= $min ?>分</td>
+                        <td><button class="btn btn-secondary btn-history-copy" style="padding:4px 10px;font-size:12px;">コピー</button></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
 </main>
 
 <!-- Datalist for project history -->
@@ -213,6 +280,7 @@ function status_class(string $status): string {
         today:           "<?= $today ?>",
         initialState:    <?= json_encode($session, JSON_UNESCAPED_UNICODE) ?>,
         prevIncomplete:  <?= json_encode($prevIncomplete, JSON_UNESCAPED_UNICODE) ?>,
+        recentHistory:   <?= json_encode($recentHistory, JSON_UNESCAPED_UNICODE) ?>,
     };
 </script>
 <script src="/assets/js/timer.js"></script>

@@ -1,9 +1,11 @@
 <?php
+require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/user.php';
+$config      = load_config();
 $currentUser = get_koma_user();
 ?>
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="<?= htmlspecialchars($config['theme'] ?? 'dark') ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

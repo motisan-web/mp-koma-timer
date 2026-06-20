@@ -56,17 +56,17 @@ foreach ($komas as $k) {
         $seconds = max($seconds, 0);
     }
     $minutes = (int)round($seconds / 60);
-    $dispMin = $done ? $komaDur : $minutes; // completed = 80min canonical
     $totalSeconds += $seconds;
 
     $overtimeSec = (int)($k['overtime_seconds'] ?? 0);
     $overtimeNote = $overtimeSec > 0 ? sprintf(' (%d分超過)', (int)round($overtimeSec / 60)) : '';
 
-    $lines[] = "### コマ{$komaNum}({$dispMin}分){$overtimeNote}";
+    $lines[] = "### コマ{$komaNum}({$komaDur}分){$overtimeNote}";
     $lines[] = "- {$checkBox} **内容**: {$name}";
     if ($projId !== '') {
         $lines[] = "- **プロジェクト**: {$projId}";
     }
+    $lines[] = "- **時間(分)**: {$minutes}";
     $lines[] = '';
 }
 

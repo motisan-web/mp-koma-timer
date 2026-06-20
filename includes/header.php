@@ -21,8 +21,31 @@ $navItems = [
                 </a>
             <?php endforeach; ?>
         </nav>
+        <button class="btn-theme" id="btn-theme-toggle" title="テーマ切り替え">🌙</button>
         <div class="site-header__user">
             <?= htmlspecialchars($currentUser['nickname'] ?? 'もちさん') ?>
         </div>
     </div>
 </header>
+<script>
+(function() {
+    var btn = document.getElementById('btn-theme-toggle');
+    function applyTheme(t) {
+        document.documentElement.dataset.theme = t;
+        btn.textContent = t === 'light' ? '🌙' : '☀️';
+    }
+    if (btn) {
+        btn.addEventListener('click', function() {
+            var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+            applyTheme(next);
+            fetch('/api/timer.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'set_theme', theme: next }),
+            });
+        });
+        // Sync button icon to current theme
+        applyTheme(document.documentElement.dataset.theme || 'dark');
+    }
+})();
+</script>

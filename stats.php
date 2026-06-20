@@ -136,7 +136,7 @@ function fmt_min(int $sec): string {
 }
 ?>
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="<?= htmlspecialchars($config['theme'] ?? 'dark') ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -12,6 +12,7 @@ function load_config(): array {
         'koma_count'              => 6,
         'koma_duration_minutes'   => 80,
         'max_duration_minutes'    => 100,
+        'theme'                   => 'dark',
         'hooks' => [
             'koma_start'    => ['url' => '', 'method' => 'GET', 'enabled' => false],
             'koma_complete' => ['url' => '', 'method' => 'GET', 'enabled' => false],

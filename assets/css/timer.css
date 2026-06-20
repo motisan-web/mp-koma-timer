@@ -32,6 +32,20 @@
     --font: "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
 }
 
+/* --- Light Theme --- */
+html[data-theme="light"] {
+    --bg:           #f5f6f8;
+    --bg-card:      #ffffff;
+    --bg-card-hover:#f0f2f5;
+    --bg-input:     #eef0f4;
+    --border:       #d4d8e0;
+    --border-focus: #5c6bc0;
+    --text:         #1a1d27;
+    --text-muted:   #5a6077;
+    --text-dim:     #9aa0b4;
+    --shadow:       0 2px 8px rgba(0,0,0,0.12);
+}
+
 /* --- Reset & Base --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -103,6 +117,11 @@ input, select, textarea, button { font-family: inherit; font-size: inherit; }
     text-align: center;
     font-size: 12px;
     color: var(--text-dim);
+}
+.site-footer__inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
 }
 
 /* --- Page Layout --- */
@@ -276,6 +295,27 @@ input, select, textarea, button { font-family: inherit; font-size: inherit; }
 .btn-start:hover:not(:disabled)    { opacity: .85; }
 .btn-pause:hover:not(:disabled)    { background: rgba(92,107,192,.15); }
 .btn-complete:hover:not(:disabled) { opacity: .85; }
+
+.btn-round {
+    background: transparent;
+    color: var(--orange);
+    border-color: var(--orange);
+}
+.btn-round:hover:not(:disabled) { background: var(--orange-bg); }
+
+/* Theme toggle button */
+.btn-theme {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: background .15s, color .15s;
+}
+.btn-theme:hover { background: var(--bg-input); color: var(--text); }
 
 /* Break checkbox */
 .koma-card__break {
@@ -511,6 +551,62 @@ input, select, textarea, button { font-family: inherit; font-size: inherit; }
     color: var(--orange);
     margin-bottom: 4px;
 }
+
+/* --- Koma History --- */
+.koma-history {
+    margin-top: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.koma-history__toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+    border: none;
+    padding: 12px 16px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    transition: background .15s;
+}
+.koma-history__toggle:hover { background: var(--bg-card-hover); color: var(--text); }
+.koma-history__toggle-icon { font-size: 10px; }
+.koma-history__body {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+}
+.koma-history__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.koma-history__table th {
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.koma-history__table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.koma-history__table tr:last-child td { border-bottom: none; }
+.koma-history__table tr:hover td { background: rgba(255,255,255,.02); }
+.koma-history__date    { color: var(--text-muted); white-space: nowrap; }
+.koma-history__slot    { color: var(--text-dim); white-space: nowrap; }
+.koma-history__name    { color: var(--text); max-width: 220px; }
+.koma-history__project { color: var(--accent-hover); font-size: 11px; white-space: nowrap; }
+.koma-history__time    { color: var(--text-muted); white-space: nowrap; }
 
 /* --- Mobile --- */
 @media (max-width: 767px) {

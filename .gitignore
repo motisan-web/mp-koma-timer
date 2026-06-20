@@ -1,5 +1,7 @@
 .claude/
 data/sessions/
+data/sessions.zip
+data/config.json
 logs/
 config.local.php
 .ftp-deploy-sync-state.json
