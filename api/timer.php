@@ -183,6 +183,16 @@ $max_duration  = (int)$config['max_duration_minutes'] * 60;
 
 // --- Non-slot actions ---
 
+if ($action === 'set_slot_count') {
+    $count   = max((int)($req['count'] ?? 0), (int)$config['koma_count']);
+    $count   = min($count, 20); // hard cap
+    $today   = today_str();
+    $session = load_session($today);
+    $session['slot_count'] = $count;
+    save_session($session);
+    api_ok(['slot_count' => $count]);
+}
+
 if ($action === 'set_theme') {
     $theme = ($req['theme'] ?? '') === 'light' ? 'light' : 'dark';
     $cfg   = load_config();

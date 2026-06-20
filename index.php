@@ -44,7 +44,7 @@ foreach ($komaMap as $slotId => $k) {
         $maxExistingSlot = max($maxExistingSlot, (int)$slotId);
     }
 }
-$renderSlotCount = max($komaCount, $maxExistingSlot);
+$renderSlotCount = max($komaCount, (int)($session['slot_count'] ?? 0), $maxExistingSlot);
 
 $isEmbed = defined('EMBED_MODE') && EMBED_MODE;
 

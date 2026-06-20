@@ -607,6 +607,9 @@ function addKoma() {
     card.querySelector(`#koma-break-${next}`)
         .addEventListener('change', e => doSetBreak(next, e.target.checked));
 
+    // Persist the new slot count so page reload shows the same number of cards
+    apiCall('set_slot_count', { count: next });
+
     // Update CFG.komaCount so tick/notify logic covers the new slot
     CFG.komaCount = next;
 
