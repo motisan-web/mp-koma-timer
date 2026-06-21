@@ -186,8 +186,10 @@ $max_duration  = (int)$config['max_duration_minutes'] * 60;
 if ($action === 'set_slot_count') {
     $count   = max((int)($req['count'] ?? 0), (int)$config['koma_count']);
     $count   = min($count, 20); // hard cap
-    $today   = today_str();
-    $session = load_session($today);
+    // Use the date sent by the client (CFG.today at page load) so that around midnight
+    // the count is always saved to the correct day's session, not tomorrow's.
+    $target  = $req_date ?? today_str();
+    $session = load_session($target);
     $session['slot_count'] = $count;
     save_session($session);
     api_ok(['slot_count' => $count]);

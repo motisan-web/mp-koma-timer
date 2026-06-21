@@ -28,10 +28,19 @@ $prevSession = load_session($yesterday);
 $prevIncomplete = [];
 $prevIncompleteSlots = [];
 foreach ($prevSession['koma'] as $pk) {
-    if (in_array($pk['status'], ['running', 'paused', 'overtime'])) {
-        $prevIncomplete[] = ['date' => $yesterday, 'koma' => $pk];
-        $prevIncompleteSlots[(int)$pk['id']] = true;
+    if (!in_array($pk['status'], ['running', 'paused', 'overtime'])) continue;
+    // Recompute total_seconds so JS receives an accurate value at page-render time.
+    $total = 0;
+    $now_dt = new DateTime('now', $tz2);
+    foreach (($pk['segments'] ?? []) as $seg) {
+        $s = new DateTime($seg['start'], $tz2);
+        $e = isset($seg['end']) ? new DateTime($seg['end'], $tz2) : $now_dt;
+        $diff = $e->getTimestamp() - $s->getTimestamp();
+        if ($diff > 0) $total += $diff;
     }
+    $pk['total_seconds'] = $total;
+    $prevIncomplete[] = ['date' => $yesterday, 'koma' => $pk];
+    $prevIncompleteSlots[(int)$pk['id']] = true;
 }
 
 // Render at least $komaCount slots, but also show any extra slots already in today's session.

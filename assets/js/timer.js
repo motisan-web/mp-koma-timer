@@ -384,7 +384,21 @@ function renderPrevKoma(key) {
 
     if (!badge) return;
 
-    const elapsed   = liveElapsed(k);
+    // For done komas use stored total_seconds. For running komas use total_seconds
+    // (PHP-computed at page render) + browser-side elapsed since page load — this avoids
+    // relying on JS date-parsing of old segment timestamps and prevents huge overnight values.
+    // For paused komas use liveElapsed (closed segments sum is already correct).
+    const isRunningPrev = status === 'running' || status === 'overtime';
+    const donePrev = isDone(status);
+    let elapsed;
+    if (donePrev) {
+        elapsed = k.total_seconds ?? 0;
+    } else if (isRunningPrev) {
+        const sinceLoad = Math.max(0, Math.floor((Date.now() + _clockOffset - CFG.serverNow) / 1000));
+        elapsed = (k.total_seconds ?? 0) + sinceLoad;
+    } else {
+        elapsed = liveElapsed(k); // paused: closed segments, correct
+    }
     const remaining = Math.max(0, CFG.komaDurationSec - elapsed);
     const overSec   = Math.max(0, elapsed - CFG.komaDurationSec);
     const progress  = Math.min(100, Math.round(elapsed / CFG.komaDurationSec * 100));
@@ -406,14 +420,11 @@ function renderPrevKoma(key) {
     badge.className   = `koma-card__status-badge ${status}`;
     card.className    = 'koma-card koma-card--prev ' + (STATUS_CLASS[status] || '');
 
-    const isRunning = status === 'running' || status === 'overtime';
-    const done      = isDone(status);
-
-    btnStart.style.display  = isRunning ? 'none' : '';
-    btnPause.style.display  = isRunning ? '' : 'none';
-    btnStart.disabled       = done;
-    btnComplete.disabled    = done;
-    btnClose.disabled       = done;
+    btnStart.style.display  = isRunningPrev ? 'none' : '';
+    btnPause.style.display  = isRunningPrev ? '' : 'none';
+    btnStart.disabled       = donePrev;
+    btnComplete.disabled    = donePrev;
+    btnClose.disabled       = donePrev;
 }
 
 function startPrevTick(key) {
@@ -618,8 +629,10 @@ function addKoma() {
     card.querySelector(`#koma-break-${next}`)
         .addEventListener('change', e => doSetBreak(next, e.target.checked));
 
-    // Persist the new slot count so page reload shows the same number of cards
-    apiCall('set_slot_count', { count: next });
+    // Persist the new slot count so page reload shows the same number of cards.
+    // Pass CFG.today so the count is always saved to the current session date,
+    // preventing midnight edge cases from writing slot_count to the next day's session.
+    apiCall('set_slot_count', { count: next, date: CFG.today });
 
     // Update CFG.komaCount so tick/notify logic covers the new slot
     CFG.komaCount = next;
