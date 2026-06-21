@@ -130,7 +130,10 @@ function renderKoma(slot) {
         if (breakLabel)  breakLabel.classList.toggle('is-checked', !!k.break_after);
     }
 
-    const elapsed   = k ? liveElapsed(k) : 0;
+    // For done komas use stored total_seconds (authoritative, respects manual adjustments like round_to_100min).
+    // For active komas use liveElapsed for real-time display.
+    const done    = isDone(status);
+    const elapsed = k ? (done ? (k.total_seconds ?? 0) : liveElapsed(k)) : 0;
     const remaining = Math.max(0, CFG.komaDurationSec - elapsed);
     const overSec   = Math.max(0, elapsed - CFG.komaDurationSec);
     const progress  = Math.min(100, Math.round(elapsed / CFG.komaDurationSec * 100));
@@ -153,7 +156,6 @@ function renderKoma(slot) {
     card.className    = 'koma-card ' + (STATUS_CLASS[status] || '');
 
     const isRunning = status === 'running' || status === 'overtime';
-    const done      = isDone(status);
 
     const isPhantom = done && status === 'completed' && k && k.segments.length === 0;
 
