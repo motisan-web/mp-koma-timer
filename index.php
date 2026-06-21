@@ -284,6 +284,7 @@ function status_class(string $status): string {
         komaDurationSec: <?= (int)$config['koma_duration_minutes'] * 60 ?>,
         maxDurationSec:  <?= (int)$config['max_duration_minutes'] * 60 ?>,
         today:           "<?= $today ?>",
+        serverNow:       <?= (new DateTime('now', new DateTimeZone('Asia/Tokyo')))->getTimestamp() * 1000 ?>,
         initialState:    <?= json_encode($session, JSON_UNESCAPED_UNICODE) ?>,
         prevIncomplete:  <?= json_encode($prevIncomplete, JSON_UNESCAPED_UNICODE) ?>,
         recentHistory:   <?= json_encode($recentHistory, JSON_UNESCAPED_UNICODE) ?>,

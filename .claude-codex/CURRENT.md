@@ -1,6 +1,6 @@
 # 現在の作業状態
 
-> 最終更新: 2026-06-21 — **v2.0.0 リリース**
+> 最終更新: 2026-06-21 — v2.0.0 後の追加修正
 
 ---
 
@@ -20,6 +20,13 @@
 詳細は `.claude-codex/change/` 配下の各変更ログを参照。
 
 ---
+
+## v2.0.0 以降の追加修正
+
+| # | 種別 | 内容 |
+|---|---|---|
+| #I-007 | fix | コマ追加後リロードで消える・データ入力済みコマも非表示 → slot_count 保存 + phantom 判定厳格化 |
+| #I-008 | fix | タイマー表示が進まない・ズレる → サーバー時刻を KOMA_CONFIG に渡しクロックオフセット補正 |
 
 ## 次にやること
 
@@ -48,6 +55,7 @@
 - JSONエンコード: `JSON_UNESCAPED_UNICODE` で統一
 
 ### フロントエンド
+- `CFG.serverNow`: PHPがレンダリング時のサーバー時刻（ms）を出力。`_clockOffset = CFG.serverNow - Date.now()` でブラウザとのズレを補正し `liveElapsed` に使用
 - `prevKey(date, slot)` は `"YYYYMMDD s スロット番号"` 形式（例: `"20260418s7"`）— CSSセレクター用
 - `CFG.komaCount` はページロード時に PHP 側の `$renderSlotCount` で初期化。動的追加のたびにJSで更新される
 - 前日コマエリアはJSで動的生成（PHPは `prevIncomplete` 配列をCFGに渡すだけ）

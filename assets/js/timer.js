@@ -68,16 +68,25 @@ function isDone(status) {
     return ['completed', 'overtime_max', 'closed', 'auto_closed'].includes(status);
 }
 
+// --- Clock offset correction ---
+// PHP passes its server timestamp at page render time. We use it to correct
+// for browser/server clock skew so that liveElapsed is accurate even when
+// the clocks differ by several seconds (a common cause of frozen display).
+const _clockOffset = (CFG.serverNow || 0) - Date.now(); // ms: positive if server is ahead
+
 // --- Live elapsed ---
 
 function liveElapsed(k) {
-    if (!k || !k.segments) return 0;
+    if (!k || !k.segments || k.segments.length === 0) return 0;
     let total = 0;
-    const now = Date.now();
+    // Use server-aligned browser time to avoid clock-skew errors.
+    const now = Date.now() + _clockOffset;
     for (const seg of k.segments) {
         const start = new Date(seg.start).getTime();
-        const end   = seg.end ? new Date(seg.end).getTime() : now;
-        total += Math.max(0, Math.floor((end - start) / 1000));
+        if (isNaN(start)) continue;
+        const end = seg.end ? new Date(seg.end).getTime() : now;
+        const diff = isNaN(end) ? 0 : Math.floor((end - start) / 1000);
+        if (diff > 0) total += diff;
     }
     return total;
 }
